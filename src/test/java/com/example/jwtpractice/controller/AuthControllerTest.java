@@ -2,6 +2,8 @@ package com.example.jwtpractice.controller;
 
 import com.example.jwtpractice.controller.dto.TokenResponse;
 import com.example.jwtpractice.core.JwtTokenProvider;
+import com.example.jwtpractice.exception.AuthExtractException;
+import com.example.jwtpractice.exception.InvalidTokenException;
 import com.example.jwtpractice.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -74,5 +77,38 @@ class AuthControllerTest {
         //then
         results.andExpect(status().isOk())
                 .andExpect(content().string(expect));
+    }
+
+    @Test
+    @DisplayName("JWT 형식이 아닌 토큰")
+    void invalidToken_notJwtTokenFormat() throws Exception {
+        //given
+        String invalidToken = "invalid token";
+
+        //when
+        ResultActions results = mockMvc.perform(get("/verify")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + invalidToken));
+
+        //then
+        results.andDo(print())
+                .andExpect(status().isUnauthorized()).
+                andExpect(content().string(InvalidTokenException.ERROR_MSG));
+
+    }
+
+    @Test
+    @DisplayName("인증 타입이 Bearer이 아닌 경우")
+    void invalidToken_invalidAuthType() throws Exception {
+        //given
+        String token = provider.createToken("1");
+
+        //when
+        ResultActions results = mockMvc.perform(get("/verify")
+                .header(HttpHeaders.AUTHORIZATION, "Bearerr " + token));
+
+        //then
+        results.andDo(print())
+                .andExpect(status().isUnauthorized()).
+                andExpect(content().string(AuthExtractException.ERROR_MSG));
     }
 }

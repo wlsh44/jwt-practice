@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class AuthControllerAdvice {
 
     @ExceptionHandler(AuthException.class)
-    public ResponseEntity<Void> authException(AuthException exception) {
+    public ResponseEntity<String> authException(AuthException exception) {
         log.info("exception.getErrorMsg() = {}", exception.getErrorMsg());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exception.getErrorMsg());
     }
 }
